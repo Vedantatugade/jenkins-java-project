@@ -1,43 +1,55 @@
 pipeline {
- agent any
-stages{
-   stage("checkout"){
-     steps {
-           sh """
-           echo "Checkout done - $PWD"
-           ls -l
-           """
-      }
-   }
+    agent any
 
-stage("Building the application"){
-     steps {
-         sh """
-           echo "========Building Java Application============"
-           mvn clean package
-           echo "======Building Java Application completed====="
-         """      
-      }
-   }
+    stages {
+        stage("Checkout") {
+            steps {
+                // Automatically checkout source code from Git
+                checkout scm
+                sh '''
+                    echo "✅ Checkout completed in: $PWD"
+                    ls -l
+                '''
+            }
+        }
 
-stage("Testing the application"){
-     steps {
-         sh """
-           echo "========Testing Java Application============"
-           mvn Test
-           echo "======Testing Java Application completed====="
-         """      
-      }
-   }
-stage("Building the Docker Image"){
-     steps {
-         sh """
-           echo "========Building The Docker Image==========="
-           mvn Test
-           echo "======Building The Docker Image completed====="
-         """      
-      }
-   }
-} // end of stages
+        stage("Build Application") {
+            steps {
+                sh '''
+                    echo "🚀 Building Java Application..."
+                    mvn clean package
+                    echo "✅ Build completed successfully!"
+                '''
+            }
+        }
 
-} // end of pipeline
+        stage("Test Application") {
+            steps {
+                sh '''
+                    echo "🧪 Running Unit Tests..."
+                    mvn test
+                    echo "✅ Tests completed successfully!"
+                '''
+            }
+        }
+
+        stage("Build Docker Image") {
+            steps {
+                sh '''
+                    echo "🐳 Building Docker Image..."
+                    docker build -t my-java-app:latest .
+                    echo "✅ Docker image built successfully!"
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "🎉 Pipeline executed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Please check the logs."
+        }
+    }
+}
