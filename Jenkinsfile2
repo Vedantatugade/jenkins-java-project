@@ -5,6 +5,13 @@ stages{
      steps {
            echo "Checkout done"
       }
+ }
+
+stage("Building the application"){
+     steps {
+           echo "Checkout done"
+      }
+
    }
 }
 
