@@ -33,23 +33,16 @@ pipeline {
             }
         }
 
-        stage("Build Docker Image") {
-            steps {
-                sh '''
-                    echo "🐳 Building Docker Image..."
-                    docker build -t my-java-app:latest .
-                    echo "✅ Docker image built successfully!"
-                '''
-            }
-        }
-    }
+        stage("Building the Docker Image"){
+     steps {
+         sh """
+           echo "========Building the Docker Image ============"
+           
+           echo "====== Building Image Completed ====="
+         """      
+      }
+   }
 
-    post {
-        success {
-            echo "🎉 Pipeline executed successfully!"
-        }
-        failure {
-            echo "❌ Pipeline failed. Please check the logs."
-        }
-    }
-}
+} // end of stages
+
+} // end of pipeline
