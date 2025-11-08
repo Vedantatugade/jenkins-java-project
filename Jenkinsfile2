@@ -3,16 +3,23 @@ pipeline {
 stages{
    stage("checkout"){
      steps {
-           echo "Checkout done"
+           sh """
+           echo "Checkout done - $PWD"
+           ls -l
+           """
       }
- }
+   }
 
 stage("Building the application"){
      steps {
-           echo "Checkout done"
+         sh """
+           echo "========Building Java Application============"
+           mvn clean package
+           echo "======Building Java Application completed====="
+         """      
       }
-
    }
-}
 
-}
+} // end of stages
+
+} // end of pipeline
