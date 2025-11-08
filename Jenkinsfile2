@@ -20,6 +20,24 @@ stage("Building the application"){
       }
    }
 
+stage("Testing the application"){
+     steps {
+         sh """
+           echo "========Testing Java Application============"
+           mvn Test
+           echo "======Testing Java Application completed====="
+         """      
+      }
+   }
+stage("Building the Docker Image"){
+     steps {
+         sh """
+           echo "========Building The Docker Image==========="
+           mvn Test
+           echo "======Building The Docker Image completed====="
+         """      
+      }
+   }
 } // end of stages
 
 } // end of pipeline
