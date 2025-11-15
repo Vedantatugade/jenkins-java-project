@@ -5,6 +5,7 @@ pipeline {
         IMAGE_NAME = "vedantatugade/java-project"
         CONTAINER_NAME = "java-container"
         PORT_MAPPING = "8081:7000"   // host:container
+        MINUKUBE_IP = "3.238.199.0"
     }
 
     stages {
@@ -48,5 +49,13 @@ pipeline {
                 """
             }
         }
+
+        stage('Deploying on EC2 Minikube Cluster') {
+            steps {
+                    sh 'scp deployment.yaml ubuntu@$MINIKUBE_IP:/home/ubuntu/'
+                    sh 'ssh ubuntu@$MINIKUBE_IP "kubectl delete -f /home/ubuntu/deployment.yaml --ignore-not-found=true"'
+                    sh 'ssh ubuntu@$MINIKUBE_IP "kubectl apply -f /home/ubuntu/deployment.yaml"'
+                }
+            }
     }
 }
