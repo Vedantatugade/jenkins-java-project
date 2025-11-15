@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restapi-deployment
-  image: vedantatugade/java-project
 spec:
   replicas: 3
   selector:
@@ -15,6 +14,6 @@ spec:
     spec:
       containers:
       - name: restapi-container
-        image: vedantatugade/java-project
+        image: vedantatugade/java-project:latest
         ports:
         - containerPort: 7000
