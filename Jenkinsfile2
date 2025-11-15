@@ -2,59 +2,76 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "vedantatugade/java-project"
-        IMAGE_TAG = "latest"
-        MINIKUBE_IP = "3.238.199.0"
+        DOCKER_IMAGE = "vedantatugade/java-project"
+        DOCKER_TAG = "latest"
     }
 
     stages {
 
-        stage("Checkout") {
+        stage('Checkout') {
             steps {
-                checkout scm
+                git url: 'https://github.com/Vedantatugade/jenkins-java-project.git', branch: 'master'
             }
         }
 
-        stage("Build Application") {
+        stage('Build Application') {
             steps {
-                sh "mvn clean package"
+                sh 'mvn clean package'
             }
         }
 
-        stage("Test Application") {
+        stage('Test Application') {
             steps {
-                sh "mvn test"
+                sh 'mvn test'
             }
         }
 
-        stage("Build Docker Image") {
+        stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
             }
         }
 
-        stage("Push Docker Image") {
+        stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'docker-hub-creds',
-                    usernameVariable: 'USER',
-                    passwordVariable: 'PASS'
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
                 )]) {
                     sh """
-                        echo "$PASS" | docker login -u "$USER" --password-stdin
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                     """
                 }
             }
         }
 
-        stage("Deploy to EC2 Minikube") {
+        stage('Deploy to EC2 Minikube') {
             steps {
-                sshagent(['ec2-key']) {
-                    sh 'scp -o StrictHostKeyChecking=no deployment.yaml ubuntu@3.238.199.0:/home/ubuntu/'
-                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@3.238.199.0 "kubectl apply -f /home/ubuntu/deployment.yaml"'
+                sshagent(['ec2-ssh-key']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@3.238.199.0 '
+                            minikube delete --force || true
+                            minikube start --force
+                            kubectl delete deployment java-app || true
+                            kubectl delete service java-service || true
+                            
+                            kubectl create deployment java-app --image=${DOCKER_IMAGE}:${DOCKER_TAG}
+                            kubectl expose deployment java-app --type=NodePort --port=7000
+                        '
+                    """
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "🎉 CI/CD Pipeline Completed Successfully!"
+        }
+        failure {
+            echo "❌ Pipeline Failed — Check Logs!"
         }
     }
 }
