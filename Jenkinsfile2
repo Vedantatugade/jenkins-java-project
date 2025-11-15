@@ -1,19 +1,20 @@
 pipeline {
     agent any
 
-    environment {
+environment {
         IMAGE_NAME = 'priya123456/restapi'
+
         CONTAINER_NAME = 'restapi-container'
         PORT_MAPPING = '8081:7000'  // hostPort:containerPort
     }
 
     stages {
-
         stage("Checkout") {
             steps {
+                // Automatically checkout source code from Git
                 checkout scm
                 sh '''
-                    echo "✅ Source Code Checked Out in: $PWD"
+                    echo "✅ Checkout completed in: $PWD"
                     ls -l
                 '''
             }
@@ -23,8 +24,8 @@ pipeline {
             steps {
                 sh '''
                     echo "🚀 Building Java Application..."
-                    mvn clean package -DskipTests
-                    echo "✅ Build completed!"
+                    mvn clean package
+                    echo "✅ Build completed successfully!"
                 '''
             }
         }
@@ -34,39 +35,21 @@ pipeline {
                 sh '''
                     echo "🧪 Running Unit Tests..."
                     mvn test
-                    echo "✅ All tests completed!"
+                    echo "✅ Tests completed successfully!"
                 '''
             }
         }
 
-        stage("Build Docker Image") {
-            steps {
-                sh """
-                    echo "🐳 Building Docker Image..."
-                    docker build -t ${IMAGE_NAME} .
-                    echo "✅ Docker Image Built: ${IMAGE_NAME}"
-                """
-            }
-        }
+        stage("Building the Docker Image"){
+     steps {
+         sh """
+           echo "========Building the Docker Image ============"
+           docker build -t $IMAGE_NAME .
+           echo "====== Building Image Completed ====="
+         """      
+      }
+   }
 
-        stage("Stop Old Container") {
-            steps {
-                sh """
-                    echo "🛑 Stopping old container (if exists)..."
-                    docker stop ${CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
-                """
-            }
-        }
+} // end of stages
 
-        stage("Run New Container") {
-            steps {
-                sh """
-                    echo "🚀 Running new container..."
-                    docker run -d --name ${CONTAINER_NAME} -p ${PORT_MAPPING} ${IMAGE_NAME}
-                    echo "🎉 Container started successfully!"
-                """
-            }
-        }
-    }
-}
+} // end of pipeline
