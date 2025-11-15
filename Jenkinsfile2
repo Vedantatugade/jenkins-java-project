@@ -44,7 +44,7 @@ environment {
      steps {
          sh """
            echo "========Building the Docker Image ============"
-           docker build -t vedantatugade/java-project .
+         
            echo "====== Building Image Completed ====="
          """      
       }
