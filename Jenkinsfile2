@@ -2,11 +2,12 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "vedantatugade/java-project"
-        CONTAINER_NAME = "java-container"
-        PORT_MAPPING = "8081:7000"   // host:container
-        MINUKUBE_IP = "3.238.199.0"
-    }
+    IMAGE_NAME = "vedantatugade/java-project"
+    CONTAINER_NAME = "java-container"
+    PORT_MAPPING = "8081:7000"
+    MINIKUBE_IP = "3.238.199.0"   // Correct spelling
+}
+
 
     stages {
 
