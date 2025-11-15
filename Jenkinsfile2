@@ -1,17 +1,16 @@
 pipeline {
     agent any
 
-environment {
-        IMAGE_NAME = 'vedantatugade/java-project'
-
-        CONTAINER_NAME = 'java-container'
-        PORT_MAPPING = '8081:7000'  // hostPort:containerPort
+    environment {
+        IMAGE_NAME = "vedantatugade/java-project"
+        CONTAINER_NAME = "java-container"
+        PORT_MAPPING = "8081:7000"   // host:container
     }
 
     stages {
+
         stage("Checkout") {
             steps {
-                // Automatically checkout source code from Git
                 checkout scm
                 sh '''
                     echo "✅ Checkout completed in: $PWD"
@@ -33,23 +32,21 @@ environment {
         stage("Test Application") {
             steps {
                 sh '''
-                    echo "🧪 Running Unit Tests..."
+                    echo "🧪 Running unit tests..."
                     mvn test
                     echo "✅ Tests completed successfully!"
                 '''
             }
         }
 
-        stage("Building the Docker Image"){
-     steps {
-         sh """
-           echo "========Building the Docker Image ============"
-         
-           echo "====== Building Image Completed ====="
-         """      
-      }
-   }
-
-} // end of stages
-
-} // end of pipeline
+        stage("Build Docker Image") {
+            steps {
+                sh """
+                    echo "======== Building Docker Image ============"
+                    docker build -t ${IMAGE_NAME} .
+                    echo "======== Docker Image Built Successfully ========"
+                """
+            }
+        }
+    }
+}
