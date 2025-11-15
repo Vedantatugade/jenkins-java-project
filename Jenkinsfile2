@@ -2,9 +2,9 @@ pipeline {
     agent any
 
 environment {
-        IMAGE_NAME = 'priya123456/restapi'
+        IMAGE_NAME = 'vedantatugade/java-project'
 
-        CONTAINER_NAME = 'restapi-container'
+        CONTAINER_NAME = 'java-container'
         PORT_MAPPING = '8081:7000'  // hostPort:containerPort
     }
 
@@ -44,7 +44,7 @@ environment {
      steps {
          sh """
            echo "========Building the Docker Image ============"
-           docker build -t $IMAGE_NAME .
+           docker build -t vedantatugade/java-project .
            echo "====== Building Image Completed ====="
          """      
       }
