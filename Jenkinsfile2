@@ -2,61 +2,59 @@ pipeline {
     agent any
 
     environment {
-    IMAGE_NAME = "vedantatugade/java-project"
-    CONTAINER_NAME = "java-container"
-    PORT_MAPPING = "8081:7000"
-    MINIKUBE_IP = "3.238.199.0"   
-}
-
+        IMAGE_NAME = "vedantatugade/java-project"
+        IMAGE_TAG = "latest"
+        MINIKUBE_IP = "3.238.199.0"
+    }
 
     stages {
 
         stage("Checkout") {
             steps {
                 checkout scm
-                sh '''
-                    echo "✅ Checkout completed in: $PWD"
-                    ls -l
-                '''
             }
         }
 
         stage("Build Application") {
             steps {
-                sh '''
-                    echo "🚀 Building Java Application..."
-                    mvn clean package
-                    echo "✅ Build completed successfully!"
-                '''
+                sh "mvn clean package"
             }
         }
 
         stage("Test Application") {
             steps {
-                sh '''
-                    echo "🧪 Running unit tests..."
-                    mvn test
-                    echo "✅ Tests completed successfully!"
-                '''
+                sh "mvn test"
             }
         }
 
         stage("Build Docker Image") {
             steps {
-                sh """
-                    echo "======== Building Docker Image ============"
-                    docker build -t ${IMAGE_NAME} .
-                    echo "======== Docker Image Built Successfully ========"
-                """
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
 
-        stage('Deploying on EC2 Minikube Cluster') {
+        stage("Push Docker Image") {
             steps {
-                    sh 'scp deployment.yaml ubuntu@$MINIKUBE_IP:/home/ubuntu/'
-                    sh 'ssh ubuntu@$MINIKUBE_IP "kubectl delete -f /home/ubuntu/deployment.yaml --ignore-not-found=true"'
-                    sh 'ssh ubuntu@$MINIKUBE_IP "kubectl apply -f /home/ubuntu/deployment.yaml"'
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-creds',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+                    sh """
+                        echo "$PASS" | docker login -u "$USER" --password-stdin
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
                 }
             }
+        }
+
+        stage("Deploy to EC2 Minikube") {
+            steps {
+                sshagent(['ec2-key']) {
+                    sh 'scp -o StrictHostKeyChecking=no deployment.yaml ubuntu@3.238.199.0:/home/ubuntu/'
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@3.238.199.0 "kubectl apply -f /home/ubuntu/deployment.yaml"'
+                }
+            }
+        }
     }
 }
