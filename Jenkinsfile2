@@ -7,7 +7,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/Vedantatugade/jenkins-java-project.git', branch: 'master'
@@ -47,21 +46,19 @@ pipeline {
             }
         }
 
+        // <--- Replace the previous Deploy stage with this
         stage('Deploy to EC2 Minikube') {
             steps {
-                sshagent(['ec2-ssh-key']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@3.238.199.0 '
-                            minikube delete --force || true
-                            minikube start --force
-                            kubectl delete deployment java-app || true
-                            kubectl delete service java-service || true
-                            
-                            kubectl create deployment java-app --image=${DOCKER_IMAGE}:${DOCKER_TAG}
-                            kubectl expose deployment java-app --type=NodePort --port=7000
-                        '
-                    """
-                }
+                sh """
+                ssh -i /path/to/private-key -o StrictHostKeyChecking=no ubuntu@3.238.199.0 '
+                    minikube delete --force || true
+                    minikube start --force
+                    kubectl delete deployment java-app || true
+                    kubectl delete service java-service || true
+                    kubectl create deployment java-app --image=${DOCKER_IMAGE}:${DOCKER_TAG}
+                    kubectl expose deployment java-app --type=NodePort --port=7000
+                '
+                """
             }
         }
     }
