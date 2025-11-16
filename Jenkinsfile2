@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "vedantatugade/java-project"
         DOCKER_TAG = "latest"
-        MINIKUBE_IP = "3.239.96.84"   // Your EC2 public IP
+        EC2_IP = "50.16.52.17"   // Your updated EC2 IP
     }
 
     stages {
@@ -48,27 +48,18 @@ pipeline {
             }
         }
 
-       stage('Deploy on Minikube in EC2') {
-    withCredentials([sshUserPrivateKey(credentialsId: 'ec2key', keyFileVariable: 'SSH_KEY')]) {
+        stage('Deploy on Minikube in EC2') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ec2key', keyFileVariable: 'SSH_KEY')]) {
 
-        sh """
-        ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@${EC2_IP} 'echo Connected to EC2'
-        """
+                    // Test SSH connection
+                    sh """
+                        ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@${EC2_IP} \
+                        'echo Connected to EC2 Instance'
+                    """
 
-        sh """
-        scp -i ${SSH_KEY} -o StrictHostKeyChecking=no \
-            ${WORKSPACE}/deployment.yaml \
-            ubuntu@${EC2_IP}:/home/ubuntu/
-        """
-
-        sh """
-        ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@${EC2_IP} '
-            kubectl apply -f /home/ubuntu/deployment.yaml
-        '
-        """
-    }
-}
-
-        }
-    }
-}
+                    // Copy deployment file to EC2
+                    sh """
+                        scp -i ${SSH_KEY} -o StrictHostKeyChecking=no \
+                        ${WORKSPACE}/deployment.yaml \
+                        ubuntu@${EC2_IP}:/home/ubuntu/
